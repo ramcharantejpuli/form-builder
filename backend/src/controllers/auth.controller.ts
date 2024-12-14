@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
     const user = userRepository.create({
       email: email.toLowerCase(),
       password: hashedPassword,
-      name
+      name: name || email.split('@')[0]
     });
 
     await userRepository.save(user);
@@ -99,53 +99,61 @@ export const login = async (req: Request, res: Response) => {
 
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
+    const userId = (req as any).user.userId;
     const user = await userRepository.findOne({ where: { id: userId } });
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Return user data excluding password
-    const { password: _, ...userData } = user;
-    return res.json(userData);
+    return res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    });
   } catch (error) {
     console.error('Get current user error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Error fetching user data' });
   }
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    const userId = (req as any).user.userId;
+    const { name, email, password } = req.body;
 
     const user = await userRepository.findOne({ where: { id: userId } });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const { name, email, password } = req.body;
+    if (email && email !== user.email) {
+      const existingUser = await userRepository.findOne({ where: { email: email.toLowerCase() } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+      user.email = email.toLowerCase();
+    }
 
-    // Update fields if provided
     if (name) user.name = name;
-    if (email) user.email = email;
     if (password) {
       user.password = hashPassword(password);
     }
 
     await userRepository.save(user);
 
-    // Return updated user data excluding password
-    const { password: _, ...userData } = user;
-    return res.json(userData);
+    return res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    });
   } catch (error) {
     console.error('Update profile error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Error updating profile' });
   }
 };

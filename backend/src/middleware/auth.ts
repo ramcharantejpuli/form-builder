@@ -1,16 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config';
-import { User } from '../entities/User';
-import { AppDataSource } from '../data-source';
+import jwt from 'jsonwebtoken';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User;
-    }
-  }
+export interface AuthenticatedRequest extends Request {
+  user: {
+    userId: string;
+  };
 }
 
 export const authenticateToken = async (
@@ -26,19 +20,18 @@ export const authenticateToken = async (
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    const user = await AppDataSource.getRepository(User).findOne({
-      where: { id: decoded.userId },
-    });
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'your-secret-key'
+    ) as { userId: string };
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    req.user = user;
+    (req as AuthenticatedRequest).user = { userId: decoded.userId };
     next();
   } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
     console.error('Authentication error:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+    return res.status(500).json({ message: 'Error authenticating request' });
   }
 };
