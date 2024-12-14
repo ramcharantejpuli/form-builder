@@ -1,9 +1,9 @@
 import express from 'express';
 import { corsMiddleware } from './cors.config';
-import authRoutes from './routes/auth';
-import formRoutes from './routes/form';
-import submissionRoutes from './routes/submission';
-import { errorHandler } from './middleware/error';
+import authRoutes from './routes/auth.routes';
+import formRoutes from './routes/form.routes';
+import submissionRoutes from './routes/submission.routes';
+import { errorHandler } from './middleware/errorHandler';
 import { authenticateToken } from './middleware/auth';
 
 const app = express();
@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
 // Routes
