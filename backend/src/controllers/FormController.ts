@@ -4,12 +4,13 @@ import { Form } from '../entities/Form';
 import { FormSubmission } from '../entities/FormSubmission';
 import { v4 as uuidv4 } from 'uuid';
 import { Parser } from 'json2csv';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export class FormController {
   private formRepository = AppDataSource.getRepository(Form);
   private submissionRepository = AppDataSource.getRepository(FormSubmission);
 
-  async createForm(req: Request, res: Response) {
+  async createForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { title, description, fields, settings } = req.body;
       
@@ -27,7 +28,7 @@ export class FormController {
         settings,
         shareableLink: uuidv4(),
         isActive: true,
-        userId: req.user.id // Add the user ID from the authenticated user
+        userId: req.user.userId // Add the user ID from the authenticated user
       });
 
       const savedForm = await this.formRepository.save(form);
@@ -44,7 +45,7 @@ export class FormController {
     }
   }
 
-  async getForms(req: Request, res: Response) {
+  async getForms(req: AuthenticatedRequest, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -54,7 +55,7 @@ export class FormController {
       }
 
       const forms = await this.formRepository.find({
-        where: { userId: req.user.id }, // Only get forms for the current user
+        where: { userId: req.user.userId }, // Only get forms for the current user
         order: { createdAt: 'DESC' },
         relations: ['submissions']
       });
@@ -72,7 +73,7 @@ export class FormController {
     }
   }
 
-  async getForm(req: Request, res: Response) {
+  async getForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const form = await this.formRepository.findOne({
@@ -88,7 +89,7 @@ export class FormController {
       }
 
       // If not a public form, check user authorization
-      if (!form.isActive && (!req.user || form.userId !== req.user.id)) {
+      if (!form.isActive && (!req.user || form.userId !== req.user.userId)) {
         return res.status(403).json({
           error: 'Forbidden',
           message: 'You do not have permission to view this form'
@@ -108,7 +109,7 @@ export class FormController {
     }
   }
 
-  async updateForm(req: Request, res: Response) {
+  async updateForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -124,7 +125,7 @@ export class FormController {
         });
       }
 
-      if (!req.user || form.userId !== req.user.id) {
+      if (!req.user || form.userId !== req.user.userId) {
         return res.status(403).json({
           error: 'Forbidden',
           message: 'You do not have permission to update this form'
@@ -147,7 +148,7 @@ export class FormController {
     }
   }
 
-  async deleteForm(req: Request, res: Response) {
+  async deleteForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const form = await this.formRepository.findOne({
@@ -161,7 +162,7 @@ export class FormController {
         });
       }
 
-      if (!req.user || form.userId !== req.user.id) {
+      if (!req.user || form.userId !== req.user.userId) {
         return res.status(403).json({
           error: 'Forbidden',
           message: 'You do not have permission to delete this form'
@@ -182,7 +183,7 @@ export class FormController {
     }
   }
 
-  async submitForm(req: Request, res: Response) {
+  async submitForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const { data } = req.body;
@@ -208,7 +209,7 @@ export class FormController {
       const submission = this.submissionRepository.create({
         form,
         data,
-        submittedBy: req.user?.id
+        submittedBy: req.user?.userId
       });
 
       const savedSubmission = await this.submissionRepository.save(submission);
@@ -226,7 +227,7 @@ export class FormController {
     }
   }
 
-  async getSubmissions(req: Request, res: Response) {
+  async getSubmissions(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const form = await this.formRepository.findOne({
@@ -241,7 +242,7 @@ export class FormController {
         });
       }
 
-      if (!req.user || form.userId !== req.user.id) {
+      if (!req.user || form.userId !== req.user.userId) {
         return res.status(403).json({
           error: 'Forbidden',
           message: 'You do not have permission to view submissions for this form'
@@ -261,7 +262,7 @@ export class FormController {
     }
   }
 
-  async exportSubmissions(req: Request, res: Response) {
+  async exportSubmissions(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const form = await this.formRepository.findOne({
@@ -276,7 +277,7 @@ export class FormController {
         });
       }
 
-      if (!req.user || form.userId !== req.user.id) {
+      if (!req.user || form.userId !== req.user.userId) {
         return res.status(403).json({
           error: 'Forbidden',
           message: 'You do not have permission to export submissions for this form'
