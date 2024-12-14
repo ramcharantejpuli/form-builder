@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   publish = "dist"
-  command = "npm install --no-save && npm run build"
+  command = "npm install -g vite && npm install --no-save && npm run build"
   functions = "functions"
 
 [[redirects]]
@@ -17,7 +17,7 @@
 [build.environment]
   NODE_VERSION = "18.17.0"
   NPM_VERSION = "9.6.7"
-  NPM_FLAGS = "--legacy-peer-deps --no-audit --no-fund"
+  NPM_FLAGS = "--legacy-peer-deps"
   CI = "true"
 
 [functions]
