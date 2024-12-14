@@ -12,13 +12,14 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV === 'development',
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
       },
     },
     minify: 'esbuild',
+    target: 'es2018',
   },
   server: {
     port: 3000,
@@ -26,9 +27,16 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
+    esbuildOptions: {
+      target: 'es2018',
+    },
   },
   esbuild: {
     jsxInject: `import React from 'react'`,
-    target: 'es2020',
+    target: 'es2018',
+    legalComments: 'none',
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true,
   },
 })
