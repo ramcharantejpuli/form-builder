@@ -13,8 +13,9 @@ export class FormController {
   async createForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { title, description, fields, settings } = req.body;
+      const userId = req.user.userId;
       
-      if (!req.user) {
+      if (!userId) {
         return res.status(401).json({
           error: 'Unauthorized',
           message: 'You must be logged in to create a form'
@@ -28,26 +29,31 @@ export class FormController {
         settings,
         shareableLink: uuidv4(),
         isActive: true,
-        userId: req.user.userId // Add the user ID from the authenticated user
+        userId
       });
 
-      const savedForm = await this.formRepository.save(form);
-      res.status(201).json({
+      await this.formRepository.save(form);
+
+      return res.status(201).json({
         message: 'Form created successfully',
-        data: savedForm
+        form: {
+          id: form.id,
+          title: form.title,
+          description: form.description,
+          shareableLink: form.shareableLink
+        }
       });
     } catch (error) {
-      console.error('Error creating form:', error);
-      res.status(500).json({
-        error: 'Failed to create form',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Create form error:', error);
+      return res.status(500).json({ message: 'Error creating form' });
     }
   }
 
   async getForms(req: AuthenticatedRequest, res: Response) {
     try {
-      if (!req.user) {
+      const userId = req.user.userId;
+
+      if (!userId) {
         return res.status(401).json({
           error: 'Unauthorized',
           message: 'You must be logged in to view forms'
@@ -55,37 +61,28 @@ export class FormController {
       }
 
       const forms = await this.formRepository.find({
-        where: { userId: req.user.userId }, // Only get forms for the current user
-        order: { createdAt: 'DESC' },
-        relations: ['submissions']
+        where: { userId },
+        order: { createdAt: 'DESC' }
       });
-      
-      res.json({
-        message: 'Forms retrieved successfully',
-        data: forms
-      });
+
+      return res.json(forms);
     } catch (error) {
-      console.error('Error fetching forms:', error);
-      res.status(500).json({
-        error: 'Failed to fetch forms',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Get forms error:', error);
+      return res.status(500).json({ message: 'Error fetching forms' });
     }
   }
 
   async getForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
+      const userId = req.user.userId;
+
       const form = await this.formRepository.findOne({
-        where: { id },
-        relations: ['submissions']
+        where: { id, userId }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       // If not a public form, check user authorization
@@ -96,33 +93,25 @@ export class FormController {
         });
       }
 
-      res.json({
-        message: 'Form retrieved successfully',
-        data: form
-      });
+      return res.json(form);
     } catch (error) {
-      console.error('Error fetching form:', error);
-      res.status(500).json({
-        error: 'Failed to fetch form',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Get form error:', error);
+      return res.status(500).json({ message: 'Error fetching form' });
     }
   }
 
   async updateForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
-      const updates = req.body;
+      const userId = req.user.userId;
+      const { title, description, fields, settings } = req.body;
 
       const form = await this.formRepository.findOne({
-        where: { id }
+        where: { id, userId }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       if (!req.user || form.userId !== req.user.userId) {
@@ -132,34 +121,34 @@ export class FormController {
         });
       }
 
-      Object.assign(form, updates);
-      const savedForm = await this.formRepository.save(form);
+      form.title = title;
+      form.description = description;
+      form.fields = fields;
+      form.settings = settings;
 
-      res.json({
+      await this.formRepository.save(form);
+
+      return res.json({
         message: 'Form updated successfully',
-        data: savedForm
+        form
       });
     } catch (error) {
-      console.error('Error updating form:', error);
-      res.status(500).json({
-        error: 'Failed to update form',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Update form error:', error);
+      return res.status(500).json({ message: 'Error updating form' });
     }
   }
 
   async deleteForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
+      const userId = req.user.userId;
+
       const form = await this.formRepository.findOne({
-        where: { id }
+        where: { id, userId }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       if (!req.user || form.userId !== req.user.userId) {
@@ -171,75 +160,63 @@ export class FormController {
 
       await this.formRepository.remove(form);
 
-      res.json({
-        message: 'Form deleted successfully'
-      });
+      return res.json({ message: 'Form deleted successfully' });
     } catch (error) {
-      console.error('Error deleting form:', error);
-      res.status(500).json({
-        error: 'Failed to delete form',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Delete form error:', error);
+      return res.status(500).json({ message: 'Error deleting form' });
     }
   }
 
   async submitForm(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { data } = req.body;
+      const formData = req.body;
 
       const form = await this.formRepository.findOne({
         where: { id }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       if (!form.isActive) {
-        return res.status(403).json({
-          error: 'Form inactive',
-          message: 'This form is no longer accepting submissions'
-        });
+        return res.status(400).json({ message: 'Form is not active' });
       }
 
       const submission = this.submissionRepository.create({
         form,
-        data,
+        data: formData,
         submittedBy: req.user?.userId
       });
 
-      const savedSubmission = await this.submissionRepository.save(submission);
+      await this.submissionRepository.save(submission);
 
-      res.status(201).json({
+      return res.status(201).json({
         message: 'Form submitted successfully',
-        data: savedSubmission
+        submission: {
+          id: submission.id,
+          formId: submission.formId,
+          submittedAt: submission.createdAt
+        }
       });
     } catch (error) {
-      console.error('Error submitting form:', error);
-      res.status(500).json({
-        error: 'Failed to submit form',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Submit form error:', error);
+      return res.status(500).json({ message: 'Error submitting form' });
     }
   }
 
   async getSubmissions(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
+      const userId = req.user.userId;
+
       const form = await this.formRepository.findOne({
-        where: { id },
-        relations: ['submissions']
+        where: { id, userId }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       if (!req.user || form.userId !== req.user.userId) {
@@ -249,32 +226,29 @@ export class FormController {
         });
       }
 
-      res.json({
-        message: 'Form submissions retrieved successfully',
-        data: form.submissions
+      const submissions = await this.submissionRepository.find({
+        where: { formId: id },
+        order: { createdAt: 'DESC' }
       });
+
+      return res.json(submissions);
     } catch (error) {
-      console.error('Error fetching form submissions:', error);
-      res.status(500).json({
-        error: 'Failed to fetch form submissions',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Get form submissions error:', error);
+      return res.status(500).json({ message: 'Error fetching form submissions' });
     }
   }
 
   async exportSubmissions(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
+      const userId = req.user.userId;
+
       const form = await this.formRepository.findOne({
-        where: { id },
-        relations: ['submissions']
+        where: { id, userId }
       });
 
       if (!form) {
-        return res.status(404).json({
-          error: 'Form not found',
-          message: 'The requested form does not exist'
-        });
+        return res.status(404).json({ message: 'Form not found' });
       }
 
       if (!req.user || form.userId !== req.user.userId) {
@@ -284,35 +258,20 @@ export class FormController {
         });
       }
 
-      if (!form.submissions || form.submissions.length === 0) {
-        return res.status(404).json({
-          error: 'No submissions',
-          message: 'This form has no submissions to export'
-        });
-      }
+      const submissions = await this.submissionRepository.find({
+        where: { formId: id },
+        order: { createdAt: 'DESC' }
+      });
 
-      // Prepare data for CSV export
-      const submissions = form.submissions.map(sub => ({
-        ...sub.data,
-        submittedAt: sub.submittedAt,
-        submissionId: sub.id
-      }));
-
-      // Convert to CSV
       const parser = new Parser();
-      const csv = parser.parse(submissions);
+      const csv = parser.parse(submissions.map(s => s.data));
 
-      // Set headers for file download
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename=form-${id}-submissions.csv`);
-
-      res.send(csv);
+      return res.send(csv);
     } catch (error) {
-      console.error('Error exporting form submissions:', error);
-      res.status(500).json({
-        error: 'Failed to export form submissions',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      });
+      console.error('Export submissions error:', error);
+      return res.status(500).json({ message: 'Error exporting submissions' });
     }
   }
 }
