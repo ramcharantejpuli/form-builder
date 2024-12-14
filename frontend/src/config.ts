@@ -1,32 +1,32 @@
 // API Configuration
-const config = {
-  API_URL: process.env.NODE_ENV === 'production' 
-    ? 'https://form-builder-api.onrender.com'
-    : 'http://localhost:3001',
-  APP_URL: process.env.NODE_ENV === 'production'
-    ? 'https://formbuildproject.netlify.app'
-    : 'http://localhost:3000',
-  defaultHeaders: {
-    'Content-Type': 'application/json',
-  },
-  endpoints: {
-    auth: {
-      register: '/auth/register',
-      login: '/auth/login',
-    },
-    forms: {
-      list: '/forms',
-      create: '/forms',
-      get: (id: string) => `/forms/${id}`,
-      update: (id: string) => `/forms/${id}`,
-      delete: (id: string) => `/forms/${id}`,
-      submit: (id: string) => `/forms/${id}/submit`,
-      submissions: (id: string) => `/forms/${id}/submissions`,
-    },
-  },
+export const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://form-builder-api.onrender.com'
+  : 'http://localhost:3001';
+
+export const APP_URL = process.env.NODE_ENV === 'production'
+  ? 'https://formbuildproject.netlify.app'
+  : 'http://localhost:5173';
+
+export const defaultHeaders = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
 };
 
-export default config;
+export const endpoints = {
+  auth: {
+    register: '/auth/register',
+    login: '/auth/login',
+  },
+  forms: {
+    list: '/forms',
+    create: '/forms',
+    get: (id: string) => `/forms/${id}`,
+    update: (id: string) => `/forms/${id}`,
+    delete: (id: string) => `/forms/${id}`,
+    submit: (id: string) => `/forms/${id}/submit`,
+    submissions: (id: string) => `/forms/${id}/submissions`,
+  },
+};
 
 // Authentication
 export const TOKEN_KEY = 'token';
