@@ -8,7 +8,7 @@ import formRoutes from './routes/form.routes';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 const startServer = async () => {
   try {
@@ -26,6 +26,7 @@ const startServer = async () => {
         app.listen(PORT, '0.0.0.0', () => {
           console.log(`Server is running on port ${PORT}`);
           console.log(`Environment: ${process.env.NODE_ENV}`);
+          console.log(`Database host: ${process.env.DB_HOST}`);
         });
       })
       .catch((error) => {
