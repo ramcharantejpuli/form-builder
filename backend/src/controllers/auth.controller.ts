@@ -11,9 +11,19 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ 
+        message: 'Email and password are required',
+        details: { email: !email, password: !password }
+      });
+    }
+
+    console.log('Registration attempt for:', email);
+
     // Check if user already exists
     const existingUser = await userRepository.findOne({ where: { email } });
     if (existingUser) {
+      console.log('User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -24,10 +34,11 @@ export const register = async (req: Request, res: Response) => {
     const user = userRepository.create({
       email,
       password: hashedPassword,
-      name,
+      name: name || email.split('@')[0], // Use part of email as name if not provided
     });
 
     await userRepository.save(user);
+    console.log('User created successfully:', email);
 
     // Generate JWT token
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
@@ -40,6 +51,13 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error instanceof Error) {
+      return res.status(500).json({ 
+        message: 'Registration failed',
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
