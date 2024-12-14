@@ -1,0 +1,1 @@
+{"version":3,"file":"DragDropFormBuilder.d.ts","sourceRoot":"","sources":["DragDropFormBuilder.tsx"],"names":[],"mappings":"AAIA,OAAO,EAAE,SAAS,EAAE,MAAM,kBAAkB,CAAC;AAI7C,UAAU,wBAAwB;IAChC,MAAM,EAAE,SAAS,EAAE,CAAC;IACpB,cAAc,EAAE,CAAC,MAAM,EAAE,SAAS,EAAE,KAAK,IAAI,CAAC;CAC/C;AAED,MAAM,CAAC,OAAO,UAAU,mBAAmB,CAAC,EAAE,MAAM,EAAE,cAAc,EAAE,EAAE,wBAAwB,2CAiF/F"}

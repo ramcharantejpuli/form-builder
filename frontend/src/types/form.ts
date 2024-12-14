@@ -66,18 +66,15 @@ export interface ValidationRule {
 
 export interface FormField {
   id: string;
-  type: string;
+  type: FieldType;
   label: string;
+  name: string;
   required: boolean;
-  options?: string[];
+  description?: string;
   placeholder?: string;
   defaultValue?: any;
-  validation?: {
-    min?: number;
-    max?: number;
-    pattern?: string;
-    message?: string;
-  };
+  options?: FieldOption[];
+  validation?: FieldValidation;
 }
 
 export interface FormSettings {
