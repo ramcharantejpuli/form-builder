@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { User } from '../entities/User';
+import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../data-source';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config';
+import { User } from '../entities/User';
+import { hashPassword, verifyPassword } from '../utils/password';
+import { validateEmail } from '../utils/validation';
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -12,53 +12,49 @@ export const register = async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
-        message: 'Email and password are required',
-        details: { email: !email, password: !password }
-      });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    console.log('Registration attempt for:', email);
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
-    // Check if user already exists
-    const existingUser = await userRepository.findOne({ where: { email } });
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    const existingUser = await userRepository.findOne({ where: { email: email.toLowerCase() } });
     if (existingUser) {
-      console.log('User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
+    const hashedPassword = hashPassword(password);
     const user = userRepository.create({
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
-      name: name || email.split('@')[0], // Use part of email as name if not provided
+      name
     });
 
     await userRepository.save(user);
-    console.log('User created successfully:', email);
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
 
-    // Return user data (excluding password) and token
-    const { password: _, ...userData } = user;
     return res.status(201).json({
-      user: userData,
+      message: 'User registered successfully',
       token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    if (error instanceof Error) {
-      return res.status(500).json({ 
-        message: 'Registration failed',
-        error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
-    }
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Error registering user' });
   }
 };
 
@@ -66,30 +62,38 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
-    const user = await userRepository.findOne({ where: { email } });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const user = await userRepository.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    const isValidPassword = verifyPassword(user.password, password);
+    if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
 
-    // Return user data (excluding password) and token
-    const { password: _, ...userData } = user;
     return res.json({
-      user: userData,
+      message: 'Login successful',
       token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Error logging in' });
   }
 };
 
@@ -132,7 +136,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (password) {
-      user.password = await bcrypt.hash(password, 10);
+      user.password = hashPassword(password);
     }
 
     await userRepository.save(user);
