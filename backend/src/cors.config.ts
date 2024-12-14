@@ -1,14 +1,12 @@
 import cors from 'cors';
 
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'https://ramformbuilder.netlify.app',
-    'https://form-builder-api.onrender.com'
-  ],
+  origin: true, // Allow all origins during development
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Increase preflight cache time
 };
 
 export const corsMiddleware = cors(corsOptions);

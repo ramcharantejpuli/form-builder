@@ -8,9 +8,20 @@ import { authenticateToken } from './middleware/auth';
 
 const app = express();
 
-// Middleware
+// Apply CORS first
 app.use(corsMiddleware);
+
+// Handle preflight requests
+app.options('*', corsMiddleware);
+
+// Other middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Routes
 app.use('/auth', authRoutes);
