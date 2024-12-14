@@ -1,5 +1,29 @@
 // API Configuration
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const config = {
+  apiUrl: process.env.NODE_ENV === 'production' 
+    ? 'https://form-builder.onrender.com/api'
+    : 'http://localhost:3000/api',
+  defaultHeaders: {
+    'Content-Type': 'application/json',
+  },
+  endpoints: {
+    auth: {
+      register: '/auth/register',
+      login: '/auth/login',
+    },
+    forms: {
+      list: '/forms',
+      create: '/forms',
+      get: (id: string) => `/forms/${id}`,
+      update: (id: string) => `/forms/${id}`,
+      delete: (id: string) => `/forms/${id}`,
+      submit: (id: string) => `/forms/${id}/submit`,
+      submissions: (id: string) => `/forms/${id}/submissions`,
+    },
+  },
+};
+
+export default config;
 
 // Authentication
 export const TOKEN_KEY = 'token';
