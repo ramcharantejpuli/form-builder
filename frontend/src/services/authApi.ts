@@ -1,8 +1,13 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import config from '../config';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: config.API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: true,
 });
 
 // Add token to requests if it exists
@@ -14,10 +19,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials extends LoginCredentials {
+  name: string;
+}
+
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (credentials: LoginCredentials) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', credentials);
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -25,12 +39,23 @@ export const authApi = {
     }
   },
 
-  register: async (email: string, password: string, name: string) => {
+  register: async (credentials: RegisterCredentials) => {
     try {
-      const response = await api.post('/auth/register', { email, password, name });
+      console.log('Registering user with:', credentials);
+      const response = await api.post('/auth/register', credentials);
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } catch (error) {
+      console.error('Logout error:', error);
       throw error;
     }
   },

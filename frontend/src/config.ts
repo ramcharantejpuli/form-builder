@@ -1,8 +1,11 @@
 // API Configuration
 const config = {
-  apiUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://form-builder.onrender.com/api'
-    : 'http://localhost:3000/api',
+  API_URL: process.env.NODE_ENV === 'production' 
+    ? 'https://form-builder-api.onrender.com'
+    : 'http://localhost:3001',
+  APP_URL: process.env.NODE_ENV === 'production'
+    ? 'https://formbuildproject.netlify.app'
+    : 'http://localhost:3000',
   defaultHeaders: {
     'Content-Type': 'application/json',
   },
