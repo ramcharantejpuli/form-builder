@@ -20,7 +20,7 @@ export const AppDataSource = new DataSource({
   entities: [Form, FormSubmission, User],
   subscribers: [],
   migrations: [],
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  ssl: isProduction ? { rejectUnauthorized: false } : { rejectUnauthorized: false },
   extra: {
     max: 20, // Maximum number of clients in the pool
     idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
