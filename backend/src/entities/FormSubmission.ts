@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Form } from './Form';
 
 @Entity('form_submissions')
@@ -28,6 +28,12 @@ export class FormSubmission {
 
   @Column({ type: 'text', nullable: true })
   notes?: string;
+
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
+  updatedAt!: Date;
 
   @CreateDateColumn()
   submittedAt!: Date;

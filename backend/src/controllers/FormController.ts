@@ -197,7 +197,7 @@ export class FormController {
         submission: {
           id: submission.id,
           formId: submission.formId,
-          submittedAt: submission.createdAt
+          submittedAt: submission.submittedAt
         }
       });
     } catch (error) {
@@ -228,7 +228,7 @@ export class FormController {
 
       const submissions = await this.submissionRepository.find({
         where: { formId: id },
-        order: { createdAt: 'DESC' }
+        order: { submittedAt: 'DESC' }
       });
 
       return res.json(submissions);
@@ -260,7 +260,7 @@ export class FormController {
 
       const submissions = await this.submissionRepository.find({
         where: { formId: id },
-        order: { createdAt: 'DESC' }
+        order: { submittedAt: 'DESC' }
       });
 
       const parser = new Parser();
