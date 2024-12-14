@@ -14,6 +14,7 @@ const validationSchema = z.object({
   pattern: z.string().optional(),
   accept: z.string().optional(), // For file inputs
   message: z.string().optional(),
+  email: z.boolean().optional(), // Email validation
 });
 
 const fieldSchema = z.object({
@@ -48,8 +49,14 @@ export const formSchema = z.object({
 export const formSubmissionSchema = z.object({
   body: z.object({
     data: z.record(z.any()),
+    formId: z.string().uuid(), // Added formId to submission schema
   }),
 });
+
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 export type FormField = z.infer<typeof fieldSchema>;
 export type FormSettings = z.infer<typeof formSettingsSchema>;
