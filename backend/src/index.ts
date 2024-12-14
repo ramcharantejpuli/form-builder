@@ -1,20 +1,27 @@
-import dotenv from 'dotenv';
+import { app } from './app';
 import { AppDataSource } from './data-source';
-import app from './app';
+import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-// Initialize database connection
-AppDataSource.initialize()
-  .then(() => {
-    // Start Express server
-    app.listen(PORT, () => {
+const startServer = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log('Database connection initialized');
+
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
     });
-  })
-  .catch((error) => {
-    console.error('Error during Data Source initialization:', error);
-  });
+  } catch (error) {
+    console.error('Error during server startup:', error);
+    process.exit(1);
+  }
+};
+
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
