@@ -6,7 +6,7 @@ import submissionRoutes from './routes/submission.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { authenticateToken } from './middleware/auth';
 
-const app = express();
+export const app = express();
 
 // Apply CORS first
 app.use(corsMiddleware);
@@ -30,5 +30,3 @@ app.use('/submissions', authenticateToken, submissionRoutes);
 
 // Error handling
 app.use(errorHandler);
-
-export default app;
