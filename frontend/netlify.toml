@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   publish = "dist"
-  command = "npm install --legacy-peer-deps && npm run build"
+  command = "npm install $NPM_FLAGS && npx vite build"
   functions = "functions"
 
 [[redirects]]
@@ -16,6 +16,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 [functions]
   directory = "functions"
