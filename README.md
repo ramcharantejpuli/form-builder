@@ -114,8 +114,8 @@ This project is designed, developed, and maintained by:
 **Puli Ram Charan Tej**
 - Role: Full Stack Developer
 - GitHub: [ramcharantejpuli](https://github.com/ramcharantejpuli)
-- LinkedIn: [Ram Charan Tej Puli](https://www.linkedin.com/in/ram-charan-tej-puli/)
-- Email: ramcharan.puli@gmail.com
+- LinkedIn: [Ram Charan Tej Puli](https://www.linkedin.com/in/ramcharantejpuli/)
+- Email: ramcharantejpuli@gmail.com
 
 All rights reserved 2024 Puli Ram Charan Tej
 
