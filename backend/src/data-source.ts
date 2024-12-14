@@ -21,11 +21,13 @@ export const AppDataSource = new DataSource({
   subscribers: [],
   migrations: [],
   ssl: isProduction ? { rejectUnauthorized: false } : { rejectUnauthorized: false },
+  connectTimeoutMS: 10000,
+  maxQueryExecutionTime: 5000,
   extra: {
     max: 20, // Maximum number of clients in the pool
     idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
     connectionTimeoutMillis: 10000, // Maximum time to wait for a connection
-  },
-  retryAttempts: 5, // Number of times to retry connecting
-  retryDelay: 3000, // Time to wait between retries (ms)
+    keepalive: true,
+    keepaliveInitialDelayMillis: 10000
+  }
 });

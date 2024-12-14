@@ -3,12 +3,12 @@ import { AppDataSource } from './data-source';
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import authRoutes from './routes/auth';
-import formRoutes from './routes/forms';
+import authRoutes from './routes/auth.routes';
+import formRoutes from './routes/form.routes';
 
 dotenv.config();
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
@@ -50,7 +50,4 @@ const startServer = async () => {
   }
 };
 
-startServer().catch(error => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+startServer();
