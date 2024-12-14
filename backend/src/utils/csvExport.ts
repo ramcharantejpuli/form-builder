@@ -1,34 +1,47 @@
 import { Parser } from 'json2csv';
 import { FormSubmission } from '../entities/FormSubmission';
-import { Form } from '../entities/Form';
 
-export const generateCsv = (form: Form, submissions: FormSubmission[]): string => {
-  const fields = ['submittedAt', ...form.fields.map((f: any) => f.label)];
-  
-  const data = submissions.map((submission) => {
-    const row: Record<string, any> = {
-      submittedAt: submission.submittedAt.toISOString(),
-    };
+export const exportToCSV = async (submissions: FormSubmission[]): Promise<string> => {
+  try {
+    if (!submissions.length) {
+      throw new Error('No submissions to export');
+    }
 
-    form.fields.forEach((field: any) => {
-      row[field.label] = submission.data[field.id] ?? '';
+    // Get all unique field names from all submissions
+    const fields = new Set<string>();
+    submissions.forEach(submission => {
+      Object.keys(submission.data).forEach(key => fields.add(key));
     });
 
-    return row;
-  });
+    // Create fields array with additional metadata
+    const csvFields = [
+      'Submission ID',
+      'Form ID',
+      'Form Title',
+      'Submitted At',
+      ...Array.from(fields)
+    ];
 
-  const parser = new Parser({ fields });
-  return parser.parse(data);
-};
+    // Transform submissions data
+    const csvData = submissions.map(submission => ({
+      'Submission ID': submission.id,
+      'Form ID': submission.form.id,
+      'Form Title': submission.form.title,
+      'Submitted At': submission.submittedAt,
+      ...submission.data
+    }));
 
-export const formatSubmissionForExport = (submission: FormSubmission, form: Form) => {
-  const formattedData: Record<string, any> = {
-    submittedAt: submission.submittedAt,
-  };
+    // Configure the parser
+    const parser = new Parser({
+      fields: csvFields,
+      delimiter: ',',
+      quote: '"'
+    });
 
-  form.fields.forEach((field: any) => {
-    formattedData[field.label] = submission.data[field.id] ?? '';
-  });
-
-  return formattedData;
+    // Parse data to CSV
+    return parser.parse(csvData);
+  } catch (error) {
+    console.error('Error exporting to CSV:', error);
+    throw error;
+  }
 };
