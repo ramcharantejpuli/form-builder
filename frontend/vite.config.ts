@@ -18,9 +18,17 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
       },
     },
+    minify: 'esbuild',
   },
   server: {
     port: 3000,
     host: true,
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
+  esbuild: {
+    jsxInject: `import React from 'react'`,
+    target: 'es2020',
   },
 })

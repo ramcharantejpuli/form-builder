@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   publish = "dist"
-  command = "npm install $NPM_FLAGS && npx vite build"
+  command = "npm install vite@5.0.11 @vitejs/plugin-react --save-dev && npm install $NPM_FLAGS && npx vite build"
   functions = "functions"
 
 [[redirects]]
@@ -17,6 +17,8 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
+  VITE_SKIP_TS_CHECK = "true"
+  VITE_USER_NODE_ENV = "production"
 
 [functions]
   directory = "functions"
